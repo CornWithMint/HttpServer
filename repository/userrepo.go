@@ -4,6 +4,8 @@ import (
 	"errors"
 	"server/domain"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 var UserExists = errors.New("User already exists")
@@ -11,13 +13,13 @@ var UserNotExists = errors.New("User not exists")
 var BadRequest = errors.New("Bad request")
 
 type UserStorage struct {
-	users map[int]*domain.User
+	users map[uuid.UUID]*domain.User
 	mu    *sync.RWMutex
 }
 
 func NewUserStorage() *UserStorage {
 	return &UserStorage{
-		users: make(map[int]*domain.User),
+		users: make(map[uuid.UUID]*domain.User),
 		mu:    &sync.RWMutex{},
 	}
 }

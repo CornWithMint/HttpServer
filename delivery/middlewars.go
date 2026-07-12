@@ -1,10 +1,14 @@
 package delivery
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"server/domain"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func LoggingMiddleware(next http.Handler) http.Handler {
@@ -43,7 +47,18 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+		claims := &domain.CustomClaims{}
 
+		_, err := jwt.ParseWithClaims(parts[1], claims, func(t *jwt.Token) (any, error) {
+			return nil, nil
+		})
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), "userID", claims.Userid)
+		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
 }

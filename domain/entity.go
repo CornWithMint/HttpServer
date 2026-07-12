@@ -1,6 +1,11 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
 
 type Answer struct {
 	Message string `json:"message,omitempty"`
@@ -9,7 +14,7 @@ type Answer struct {
 }
 
 type Task struct {
-	UserId    int       `json:"user_id,omitempty"`
+	UserId    uuid.UUID `json:"user_id,omitempty"`
 	ID        int       `json:"id,omitempty"`
 	Title     string    `json:"title,omitempty"`
 	Done      bool      `json:"done,omitempty"`
@@ -17,8 +22,14 @@ type Task struct {
 }
 
 type User struct {
-	ID        int       `json:"id,omitempty"`
+	ID        uuid.UUID `json:"id,omitempty"`
 	Username  string    `json:"username,omitempty"`
 	Password  string    `json:"password,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitempty"`
+}
+
+type CustomClaims struct {
+	Userid   uuid.UUID
+	Username string
+	jwt.RegisteredClaims
 }

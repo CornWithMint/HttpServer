@@ -5,6 +5,9 @@ import (
 	"server/delivery"
 	"server/repository"
 	"server/usecase"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -14,15 +17,22 @@ func main() {
 	taskUsecase := usecase.NewTaskUsecase(taskStorage)
 	userUsecase := usecase.NewAuthUsecase(userStorage)
 
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	delivery.Handlers(mux, taskUsecase, userUsecase)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
-	middlewars := delivery.RecoveryMiddleware(delivery.LoggingMiddleware(mux))
+	delivery.Handlers(r, taskUsecase, userUsecase)
 
 	server := http.Server{
 		Addr:    ":8080",
-		Handler: middlewars,
+		Handler: r,
 	}
 
 	server.ListenAndServe()

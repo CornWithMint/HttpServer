@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -50,7 +51,7 @@ func (uu *AuthUsecase) Register(username, password string) (*domain.User, error)
 		return nil, InternalServerError
 	}
 	user := &domain.User{
-		ID:        1,
+		ID:        uuid.New(),
 		Username:  username,
 		Password:  string(HashedPassword),
 		CreatedAt: time.Now(),
@@ -63,40 +64,36 @@ func (uu *AuthUsecase) Register(username, password string) (*domain.User, error)
 	return user, nil
 }
 
-func (uu *AuthUsecase) Login(username, password string) (string, error) {
+func (uu *AuthUsecase) Login(username, password string) (*string, error) {
 	var secretkey = []byte("SoSecretKey")
 	if username == "" || len(username) < 3 {
-		return "", BadRequest
+		return nil, BadRequest
 	}
 	if len(password) > 60 || len(password) < 6 {
-		return "", BadRequest
+		return nil, BadRequest
 	}
 	user, err := uu.userrepo.FindByUsername(username)
 	if err != nil {
-		return "", ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return "", ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 
-	CustomClaims := struct {
-		Userid   int
-		Username string
-		jwt.RegisteredClaims
-	}{
-		Userid:   1,
+	claims := &domain.CustomClaims{
+		Userid:   user.ID,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, CustomClaims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := token.SignedString(secretkey)
 	if err != nil {
-		return "", InternalServerError
+		return nil, InternalServerError
 	}
-	return ss, nil
+	return &ss, nil
 }

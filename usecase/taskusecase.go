@@ -5,6 +5,8 @@ import (
 	"server/domain"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var ErrEmptyTitle = errors.New("Title cannot be empty")
@@ -29,7 +31,7 @@ func NewTaskUsecase(storage TaskRepository) *TaskUsecase {
 	}
 }
 
-func (tu *TaskUsecase) CreateTask(title string) (*domain.Task, error) {
+func (tu *TaskUsecase) CreateTask(userID uuid.UUID, title string) (*domain.Task, error) {
 	tu.mu.Lock()
 	defer tu.mu.Unlock()
 
@@ -48,14 +50,17 @@ func (tu *TaskUsecase) CreateTask(title string) (*domain.Task, error) {
 	return task, nil
 }
 
-func (tu *TaskUsecase) ListTasks() ([]*domain.Task, error) {
+func (tu *TaskUsecase) ListTasks(userID uuid.UUID) ([]*domain.Task, error) {
 	arr := tu.taskusecase.GetAllTasks()
 	return arr, nil
 }
 
-func (tu *TaskUsecase) GetTaskByID(userID int) (*domain.Task, error) {
-	task, err := tu.taskusecase.GetTaskByID(userID)
+func (tu *TaskUsecase) GetTaskByID(userID uuid.UUID, ID int) (*domain.Task, error) {
+	task, err := tu.taskusecase.GetTaskByID(ID)
 	if err != nil {
+		return nil, err
+	}
+	if task.UserId != userID {
 		return nil, err
 	}
 	return task, nil
