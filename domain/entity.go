@@ -7,6 +7,7 @@ type Answer struct {
 	Text    string `json:"text,omitempty"`
 	Hello   string `json:"hello,omitempty"`
 }
+
 type Task struct {
 	UserId    int       `json:"user_id,omitempty"`
 	ID        int       `json:"id,omitempty"`
