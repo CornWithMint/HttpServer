@@ -1,14 +1,9 @@
 package repository
 
 import (
-	"errors"
 	"server/domain"
 	"sync"
 )
-
-var ErrTaskNotFound = errors.New("task not found")
-var ErrEmptyTitle = errors.New("Empty title")
-var InternalServerError = errors.New("Enternal Server Error")
 
 type InMemoryStorage struct {
 	tasks map[int]*domain.Task
@@ -47,6 +42,6 @@ func (ms *InMemoryStorage) GetTaskByID(id int) (*domain.Task, error) {
 	if _, exists := ms.tasks[id]; exists {
 		return ms.tasks[id], nil
 	}
-	return nil, ErrTaskNotFound
+	return nil, domain.ErrTaskNotFound
 
 }

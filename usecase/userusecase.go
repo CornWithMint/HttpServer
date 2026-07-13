@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"errors"
+	"log"
+	"os"
 	"server/domain"
 	"sync"
 	"time"
@@ -11,8 +13,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var UserExists = errors.New("User already exists")
-var UserNotExists = errors.New("User not exists")
 var BadRequest = errors.New("Bad request")
 var InternalServerError = errors.New("Internal Server Error")
 var ErrInvalidCredentials = errors.New("Err Invalid Credentials")
@@ -44,7 +44,7 @@ func (uu *AuthUsecase) Register(username, password string) (*domain.User, error)
 
 	exist, _ := uu.userrepo.FindByUsername(username)
 	if exist != nil {
-		return nil, UserExists
+		return nil, BadRequest
 	}
 	HashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -65,7 +65,6 @@ func (uu *AuthUsecase) Register(username, password string) (*domain.User, error)
 }
 
 func (uu *AuthUsecase) Login(username, password string) (*string, error) {
-	var secretkey = []byte("SoSecretKey")
 	if username == "" || len(username) < 3 {
 		return nil, BadRequest
 	}
@@ -91,8 +90,9 @@ func (uu *AuthUsecase) Login(username, password string) (*string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString(secretkey)
+	ss, err := token.SignedString([]byte(os.Getenv("SECRETKEY")))
 	if err != nil {
+		log.Printf("Ошибка подписи токена: %v", err)
 		return nil, InternalServerError
 	}
 	return &ss, nil

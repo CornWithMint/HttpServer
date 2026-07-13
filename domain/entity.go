@@ -1,11 +1,16 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
+
+var UserExists = errors.New("User already exists")
+var UserNotExists = errors.New("User not exists")
+var ErrTaskNotFound = errors.New("Task not found")
 
 type Answer struct {
 	Message string `json:"message,omitempty"`

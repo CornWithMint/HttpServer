@@ -13,12 +13,8 @@ import (
 	"github.com/google/uuid"
 )
 
-var UserExists = errors.New("User already exists")
-var UserNotExists = errors.New("User not exists")
 var BadRequest = errors.New("Bad request")
 var InternalServerError = errors.New("Internal Server Error")
-var ErrTaskNotFound = errors.New("task not found")
-var ErrEmptyTitle = errors.New("Empty title")
 var ErrInvalidCredentials = errors.New("Err Invalid Credentials")
 
 func Ping() http.HandlerFunc {
@@ -99,9 +95,11 @@ func Login(userStorage *usecase.AuthUsecase) http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
+		defer r.Body.Close()
 
 		token, err := userStorage.Login(user.Username, user.Password)
 		if err != nil {
+			log.Printf("Login error: %v", err) // выведет реальную ошибку
 			if errors.Is(err, BadRequest) {
 				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 				return
@@ -111,13 +109,14 @@ func Login(userStorage *usecase.AuthUsecase) http.HandlerFunc {
 				return
 			}
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Println("SOME1")
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(token)
 		if err != nil {
-			log.Println(err)
+			log.Println("SOME")
 		}
 	}
 
@@ -154,7 +153,7 @@ func PostTasks(taskStorage *usecase.TaskUsecase) http.HandlerFunc {
 
 		res, err := taskStorage.CreateTask(userID.(uuid.UUID), task.Title)
 		if err != nil {
-			if errors.Is(err, ErrEmptyTitle) {
+			if errors.Is(err, BadRequest) {
 				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 				return
 			}
@@ -184,7 +183,7 @@ func GetTasksID(taskStorage *usecase.TaskUsecase) http.HandlerFunc {
 		userID := r.Context().Value("userID")
 		res, err := taskStorage.GetTaskByID(userID.(uuid.UUID), int_id)
 		if err != nil {
-			if errors.Is(err, ErrTaskNotFound) {
+			if errors.Is(err, BadRequest) {
 				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 				return
 			}

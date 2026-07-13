@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"server/domain"
 	"strings"
 	"time"
@@ -34,23 +35,33 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
+
 		if authHeader == "" {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+
 		parts := strings.Split(authHeader, " ")
+
+		if len(parts) != 2 {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
 		if !strings.EqualFold(parts[0], "bearer") {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+
 		if parts[1] == "" {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+
 		claims := &domain.CustomClaims{}
 
 		_, err := jwt.ParseWithClaims(parts[1], claims, func(t *jwt.Token) (any, error) {
-			return nil, nil
+			return []byte(os.Getenv("SECRETKEY")), nil
 		})
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)

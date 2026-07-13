@@ -1,16 +1,11 @@
 package repository
 
 import (
-	"errors"
 	"server/domain"
 	"sync"
 
 	"github.com/google/uuid"
 )
-
-var UserExists = errors.New("User already exists")
-var UserNotExists = errors.New("User not exists")
-var BadRequest = errors.New("Bad request")
 
 type UserStorage struct {
 	users map[uuid.UUID]*domain.User
@@ -40,5 +35,5 @@ func (us *UserStorage) FindByUsername(username string) (*domain.User, error) {
 			return v, nil
 		}
 	}
-	return nil, UserNotExists
+	return nil, domain.UserNotExists
 }

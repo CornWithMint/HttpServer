@@ -9,8 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrEmptyTitle = errors.New("Title cannot be empty")
-
 type TaskRepository interface {
 	SaveTask(task *domain.Task) (*domain.Task, error)
 	GetAllTasks() []*domain.Task
@@ -37,7 +35,7 @@ func (tu *TaskUsecase) CreateTask(userID uuid.UUID, title string) (*domain.Task,
 
 	task := &domain.Task{}
 	if title == "" {
-		return nil, ErrEmptyTitle
+		return nil, BadRequest
 	}
 	task.ID = tu.nextId
 	tu.nextId++

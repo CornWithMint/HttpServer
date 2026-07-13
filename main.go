@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"server/delivery"
 	"server/repository"
@@ -8,9 +9,15 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Ошибка с .env")
+	}
+
 	taskStorage := repository.NewStorage()
 	userStorage := repository.NewUserStorage()
 
